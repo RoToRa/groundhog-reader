@@ -494,12 +494,11 @@ public class MessageListActivity
 	// Call groupMessagesDownloader to download messages from this group,
 	// and pass him the callback pointing to threadMessagesFromDB so when it
 	// finishes the messagelist get reloaded
-	@SuppressWarnings("unchecked")
 	void getNewMessagesFromServer(boolean getlatest)
 	{
 		Vector<String> groupVector = new Vector<String>(1);
 		groupVector.add(mGroup);
-		Class[] noargs = new Class[0];
+		Class<?>[] noargs = new Class[0];
 		Method callback;
 		try
 		{

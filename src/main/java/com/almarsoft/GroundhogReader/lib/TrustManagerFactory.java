@@ -1,142 +1,156 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
- * Copyright (C) 2010 Nick Booker
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * 
- * Modified from original by Nick Booker, to integrate with GroundhogReader.
+ * Copyright (C) 2008 The Android Open Source Project Copyright (C) 2010 Nick Booker Licensed under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy
+ * of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in
+ * writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+ * OF ANY KIND, either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License. Modified from original by Nick Booker, to integrate with GroundhogReader.
  */
 
-package com.almarsoft.GroundhogReader.lib;
+package com.almarsoft.GroundhogReader.lib ;
 
-import com.almarsoft.GroundhogReader.lib.DomainNameChecker;
-import java.security.cert.CertificateException;
-import android.util.Log;
+import java.security.NoSuchAlgorithmException ;
+import java.security.cert.CertificateException ;
+import java.security.cert.X509Certificate ;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
+import javax.net.ssl.TrustManager ;
+import javax.net.ssl.X509TrustManager ;
 
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
+import android.util.Log ;
 
 /**
- * This factory creates and returns two types of TrustManagers.
- *
- * The "secure" trust manager performs standard tests of certificates, and throws
- * CertificateException when the tests fail.
- *
- * The "simple" trust manager performs no tests, effectively accepting all certificates.
+ * This factory creates and returns two types of TrustManagers. The "secure" trust manager performs standard tests of
+ * certificates, and throws CertificateException when the tests fail. The "simple" trust manager performs no tests,
+ * effectively accepting all certificates.
  */
-public final class TrustManagerFactory {
-    private static X509TrustManager sUnsecureTrustManager = new SimpleX509TrustManager();
+public final class TrustManagerFactory
+{
+	/**
+	 * This trust manager performs full tests, requiring a valid, trusted certificate.
+	 */
+	private static class SecureX509TrustManager
+		implements X509TrustManager
+	{
+		private final X509TrustManager mTrustManager ;
 
-    /**
-     * This trust manager performs no tests, effectively accepting all certificates.
-     */
-    private static class SimpleX509TrustManager implements X509TrustManager {
-        public void checkClientTrusted(X509Certificate[] chain, String authType) {
-            logCertificates(chain, "Trusting client", false);
-        }
+		private final String mHost ;
 
-        public void checkServerTrusted(X509Certificate[] chain, String authType) {
-            logCertificates(chain, "Trusting server", false);
-        }
+		SecureX509TrustManager(X509TrustManager trustManager, String host)
+		{
+			mTrustManager = trustManager ;
+			mHost = host ;
+		}
 
-        public X509Certificate[] getAcceptedIssuers() {
-            return null;
-        }
-    }
+		public void checkClientTrusted(X509Certificate[] chain, String authType)
+			throws CertificateException
+		{
+			try
+			{
+				mTrustManager.checkClientTrusted(chain, authType) ;
+			}
+			catch (CertificateException ce)
+			{
+				logCertificates(chain, "Failed client", true) ;
+				throw ce ;
+			}
+		}
 
-    /**
-     * This trust manager performs full tests, requiring a valid, trusted certificate.
-     */
-    private static class SecureX509TrustManager implements X509TrustManager {
-        private X509TrustManager mTrustManager;
-        private String mHost;
+		public void checkServerTrusted(X509Certificate[] chain, String authType)
+			throws CertificateException
+		{
 
-        SecureX509TrustManager(X509TrustManager trustManager, String host) {
-            mTrustManager = trustManager;
-            mHost = host;
-        }
+			try
+			{
+				mTrustManager.checkServerTrusted(chain, authType) ;
+			}
+			catch (CertificateException ce)
+			{
+				logCertificates(chain, "Failed server", true) ;
+				throw ce ;
+			}
 
-        public void checkClientTrusted(X509Certificate[] chain, String authType)
-                throws CertificateException {
-            try {
-                mTrustManager.checkClientTrusted(chain, authType);
-            } catch (CertificateException ce) {
-                logCertificates(chain, "Failed client", true);
-                throw ce;
-            }
-        }
+			if (!DomainNameChecker.match(chain[0], mHost))
+			{
+				logCertificates(chain, "Failed domain name", true) ;
+				throw new CertificateException("Certificate domain name does not match " + mHost) ;
+			}
+		}
 
-        public void checkServerTrusted(X509Certificate[] chain, String authType)
-                throws CertificateException {
+		public X509Certificate[] getAcceptedIssuers()
+		{
+			return mTrustManager.getAcceptedIssuers() ;
+		}
+	}
 
-            try {
-                mTrustManager.checkServerTrusted(chain, authType);
-            } catch (CertificateException ce) {
-                logCertificates(chain, "Failed server", true);
-                throw ce;
-            }
+	/**
+	 * This trust manager performs no tests, effectively accepting all certificates.
+	 */
+	private static class SimpleX509TrustManager
+		implements X509TrustManager
+	{
+		public void checkClientTrusted(X509Certificate[] chain, String authType)
+		{
+			logCertificates(chain, "Trusting client", false) ;
+		}
 
-            if (!DomainNameChecker.match(chain[0], mHost)) {
-                logCertificates(chain, "Failed domain name", true);
-                throw new CertificateException("Certificate domain name does not match " + mHost);
-            }
-        }
+		public void checkServerTrusted(X509Certificate[] chain, String authType)
+		{
+			logCertificates(chain, "Trusting server", false) ;
+		}
 
-        public X509Certificate[] getAcceptedIssuers() {
-            return mTrustManager.getAcceptedIssuers();
-        }
-    }
+		public X509Certificate[] getAcceptedIssuers()
+		{
+			return null ;
+		}
+	}
 
-    /**
-     * Logging of certificates, to help debugging trust issues.  Logging strategy:
-     *   Trusting a certificate:  Lightweight log about it
-     *   Fully checking:  Silent if OK, verbose log it failure
-     *
-     * @param chain the certificate chain to dump
-     * @param caller a prefix that will be added to each log
-     * @param verbose if true, the issuer and dates will also be logged
-     */
-    private static void logCertificates(X509Certificate[] chain, String caller, boolean verbose) {
-        //if (Email.DEBUG) {
-    	if (true) {
-            for (int i = 0; i < chain.length; ++i) {
-                Log.d("Groundhog:TrustManagerFactory", caller + " Certificate #" + i);
-                Log.d("Groundhog:TrustManagerFactory", "  subject=" + chain[i].getSubjectDN());
-                if (verbose) {
-                    Log.d("Groundhog:TrustManagerFactory", "  issuer=" + chain[i].getIssuerDN());
-                    Log.d("Groundhog:TrustManagerFactory", "  dates=" + chain[i].getNotBefore()
-                            + " to " + chain[i].getNotAfter());
-                }
-            }
-        }
-    }
+	private static X509TrustManager sUnsecureTrustManager = new SimpleX509TrustManager() ;
 
-    private TrustManagerFactory() {
-    }
+	public static X509TrustManager get(String host, boolean secure)
+		throws NoSuchAlgorithmException
+	{
+		if (secure)
+		{
+			String defaultAlgorithm = javax.net.ssl.TrustManagerFactory.getDefaultAlgorithm() ;
+			javax.net.ssl.TrustManagerFactory tmf = javax.net.ssl.TrustManagerFactory.getInstance(defaultAlgorithm) ;
+			TrustManager[] tms = tmf.getTrustManagers() ;
+			return new SecureX509TrustManager((X509TrustManager)tms[0], host) ;
+		}
+		else
+			return sUnsecureTrustManager ;
+	}
 
-    public static X509TrustManager get(String host, boolean secure) throws NoSuchAlgorithmException {
-        if (secure) {
-            String defaultAlgorithm = javax.net.ssl.TrustManagerFactory.getDefaultAlgorithm();
-            javax.net.ssl.TrustManagerFactory tmf = javax.net.ssl.TrustManagerFactory.getInstance(defaultAlgorithm);
-            TrustManager[] tms = tmf.getTrustManagers();
-            return new SecureX509TrustManager((X509TrustManager) tms[0], host);
-        } else {
-            return sUnsecureTrustManager;
-        }
-    }
+	/**
+	 * Logging of certificates, to help debugging trust issues. Logging strategy: Trusting a certificate: Lightweight
+	 * log about it Fully checking: Silent if OK, verbose log it failure
+	 * 
+	 * @param chain
+	 *            the certificate chain to dump
+	 * @param caller
+	 *            a prefix that will be added to each log
+	 * @param verbose
+	 *            if true, the issuer and dates will also be logged
+	 */
+	private static void logCertificates(X509Certificate[] chain, String caller, boolean verbose)
+	{
+		// if (Email.DEBUG) {
+		if (true)
+		{
+			for (int i = 0; i < chain.length; ++i)
+			{
+				Log.d("Groundhog:TrustManagerFactory", caller + " Certificate #" + i) ;
+				Log.d("Groundhog:TrustManagerFactory", "  subject=" + chain[i].getSubjectDN()) ;
+				if (verbose)
+				{
+					Log.d("Groundhog:TrustManagerFactory", "  issuer=" + chain[i].getIssuerDN()) ;
+					Log.d("Groundhog:TrustManagerFactory",
+						"  dates=" + chain[i].getNotBefore() + " to " + chain[i].getNotAfter()) ;
+				}
+			}
+		}
+	}
+
+	private TrustManagerFactory()
+	{
+	}
 }
-
