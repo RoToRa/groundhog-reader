@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--  Not to change -->
-    <string name="app_name">Groundhog</string>
+    <string name="app_name">Thread Weaver</string>
     
 <string name="done">Done</string>
 
@@ -311,4 +311,8 @@
 	<string name="server_uses_ssl_summary">Tick if the server supports SSL encryption.</string>
 	<string name="trust_all_certificates_title">Trust any certificate</string>
 	<string name="trust_all_certificates_summary">Tick if your server has a self-signed certificate.  Use with caution!</string>
+	
+<!--  New on 1.20.4 -->
+	<string name="groupsearch">Searching matching groups...</string>
+	
 </resources>

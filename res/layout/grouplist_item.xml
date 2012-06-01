@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+<TextView  xmlns:android="http://schemas.android.com/apk/res/android" 
     android:id="@android:id/text1"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:textAppearance="?android:attr/textAppearanceLarge"
     android:gravity="center_vertical"
-    android:paddingLeft="5dip"
+    android:textSize="18sp"
+    android:typeface="sans"
+    android:padding="20sp"
     android:singleLine="true"
     android:ellipsize="marquee"
+    android:layout_weight="1"
 />

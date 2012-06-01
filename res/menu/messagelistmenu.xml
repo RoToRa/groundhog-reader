@@ -1,7 +1,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
 	<item android:orderInCategory="1" 
-		android:title="New post"
+		android:title="@string/msglist_newpost"
 		android:id="@+id/messagelist_menu_newpost" 
 		android:icon="@android:drawable/ic_menu_edit" 
 	/>

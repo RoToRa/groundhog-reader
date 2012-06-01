@@ -76,8 +76,9 @@
 			android:scrollbars="vertical"
 			android:gravity="left" 
 			android:autoText="true"
-			android:capitalize="sentences" 
+			android:capitalize="none" 
 			android:layout_weight="0.8" 
+			android:maxEms="80"
 		/>
 
 	</LinearLayout> <!-- Message Layout -->
