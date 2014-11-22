@@ -2,6 +2,10 @@
 bin/*
 gen/*
 target/*
+build/*
 .classpath
 .project
 .settings/*
+.gradle/*
+.idea/*
+*.iml

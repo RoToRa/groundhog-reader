@@ -1,3 +1,7 @@
+1.20.5
+- Project converted to Gradle
+- Target SDK bumped to 21
+
 1.20.4
 - Project forked to Github. A couple of fixes along the way (still
   need testing). There is a gap in changes, because the changelog
